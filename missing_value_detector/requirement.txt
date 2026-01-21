@@ -1,0 +1,10 @@
+langgraph
+pandas
+ipykernel
+langchain
+langchain-core
+langchain-groq
+streamlit
+typing-extensions
+
+

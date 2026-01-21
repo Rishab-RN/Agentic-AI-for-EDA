@@ -1,0 +1,23 @@
+# Outlier Detector Module - Requirements
+# ========================================
+# These are the dependencies for the Outlier Detector agent.
+# Install with: pip install -r requirements.txt
+
+# Core Data Science
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.0.0
+
+# LangChain & LLM (Optional - for intelligent column classification)
+langchain>=0.1.0
+langchain-groq>=0.1.0
+langchain-core>=0.1.0
+
+# LangGraph (Optional - for workflow orchestration)
+langgraph>=0.0.20
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# Note: The module works in degraded mode if LangChain/LangGraph are not installed.
+# Core functionality (outlier detection) will still work using heuristics.
