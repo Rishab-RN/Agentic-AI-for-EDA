@@ -1,29 +1,16 @@
-# =====================================================
-# Report Agent - Industry-Level PDF Report Generator
-# =====================================================
-# Generates comprehensive EDA reports with:
-# - Executive Summary with Data Quality Score
-# - Detailed Missing Value Treatment Analysis
-# - Outlier Detection & Treatment Report
-# - Visualization Gallery with AI-Powered Inferences
-# - Professional Styling with Groq LLM Insights
-# =====================================================
-
 import os
 import json
 from datetime import datetime
 from typing import Generator, Dict, Any, List
 
-# WeasyPrint is optional - imported lazily in generate_pdf() method
-WEASYPRINT_AVAILABLE = None  # Will be checked when needed
 
-# Load environment variables from backend/.env
+WEASYPRINT_AVAILABLE = None  
+
 from dotenv import load_dotenv
 import pathlib
 _backend_dir = pathlib.Path(__file__).parent.parent
 load_dotenv(_backend_dir / '.env')
 
-# Groq API for intelligent insights - uses separate key for reports
 GROQ_API_KEY = os.getenv("GROQ_API_KEY_REPORT")
 
 
@@ -66,7 +53,6 @@ class ReportAgent:
             return self._get_fallback_insight(insight_type, data_summary)
         
         try:
-            # Build prompt based on insight type
             if insight_type == "overview":
                 prompt = f"""You are a senior data scientist writing an executive summary for a data quality report.
                 

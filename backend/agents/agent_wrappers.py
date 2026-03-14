@@ -1,15 +1,9 @@
-# =====================================================
-# Agent Wrappers - Bridge between Flask and existing agents
-# =====================================================
-
 import pandas as pd
 import sys
 import os
 
-# Load environment variables (for GROQ_API_KEY etc.)
 from dotenv import load_dotenv
 
-# Try multiple locations for .env file
 env_paths = [
     os.path.join(os.path.dirname(__file__), '..', '.env'),  # backend/.env
     os.path.join(os.path.dirname(__file__), '..', '..', '.env'),  # EL_sem3/.env
@@ -20,9 +14,8 @@ for env_path in env_paths:
         load_dotenv(env_path)
         break
 else:
-    load_dotenv()  # Try default locations
+    load_dotenv()  
 
-# Add agent directories to path
 AGENTS_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(AGENTS_DIR, "missing_value_detector"))
 sys.path.insert(0, os.path.join(AGENTS_DIR, "Outlier_detector"))
@@ -44,10 +37,10 @@ def run_missing_value_agent(input_csv: str, output_csv: str) -> dict:
     try:
         from missingvalue_update import run_agent
         
-        # Run the agent
+        
         cleaned_df, report = run_agent(input_csv)
         
-        # Save cleaned data
+       
         cleaned_df.to_csv(output_csv, index=False)
         
         return {

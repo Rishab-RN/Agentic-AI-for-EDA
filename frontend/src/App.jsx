@@ -236,8 +236,12 @@ function MainPage() {
                                 <span className="stat-label">Columns</span>
                             </div>
                             <div className="stat-item" style={{ color: analysis.missing_analysis?.total_missing > 0 ? 'var(--accent-secondary)' : 'inherit' }}>
-                                <span className="stat-value">{analysis.missing_analysis?.total_missing?.toLocaleString() || 0}</span>
-                                <span className="stat-label">Missing Values</span>
+                                <span className="stat-value">
+                                    {analysis.missing_analysis?.total_missing?.toLocaleString() || 0}
+                                    <span style={{ fontSize: '0.6em', opacity: 0.7, margin: '0 4px' }}>/</span>
+                                    {((analysis.total_rows || 0) * (analysis.total_columns || 0)).toLocaleString()}
+                                </span>
+                                <span className="stat-label">Missing Cells</span>
                             </div>
                             <div className="stat-item">
                                 <span className="stat-value">{analysis.outlier_analysis?.columns_with_outliers || 0}</span>

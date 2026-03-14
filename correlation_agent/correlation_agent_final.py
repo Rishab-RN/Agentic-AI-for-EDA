@@ -267,6 +267,42 @@ def compute_vif(df: pd.DataFrame, features: list):
     return vif_results
 
 
+def encode_categorical_features(df: pd.DataFrame, target_col: Optional[str]):
+    """Encode categorical features using One-Hot Encoding and Label Encoding."""
+    df = df.copy()
+    encoded_info = []
+    
+    categorical_cols = list(df.select_dtypes(include=["object", "category"]).columns)
+    
+    # Encode target column if categorical
+    if target_col in categorical_cols:
+        categorical_cols.remove(target_col)
+        from sklearn.preprocessing import LabelEncoder
+        le = LabelEncoder()
+        df[target_col] = le.fit_transform(df[target_col].astype(str))
+        encoded_info.append({"column": target_col, "method": "Label Encoding (Target)"})
+        
+    for col in categorical_cols:
+        unique_count = df[col].nunique()
+        if unique_count <= 10:
+            # One-Hot Encode for low cardinality
+            df = pd.get_dummies(df, columns=[col], drop_first=True)
+            encoded_info.append({"column": col, "method": "One-Hot Encoding", "unique_values": int(unique_count)})
+        else:
+            # Label Encode for high cardinality
+            from sklearn.preprocessing import LabelEncoder
+            le = LabelEncoder()
+            df[col] = le.fit_transform(df[col].astype(str))
+            encoded_info.append({"column": col, "method": "Label Encoding", "unique_values": int(unique_count)})
+            
+    # Convert bool columns from get_dummies to int
+    for col in df.columns:
+        if df[col].dtype == bool:
+            df[col] = df[col].astype(int)
+            
+    return df, encoded_info
+
+
 def apply_removal(df: pd.DataFrame, redundant_pairs: list, vif_results: list, 
                   model_type: str, target_col: Optional[str]):
     """Remove redundant features based on analysis."""
@@ -304,7 +340,7 @@ def apply_removal(df: pd.DataFrame, redundant_pairs: list, vif_results: list,
 
 
 def generate_llm_summary(model_type: str, target_col: Optional[str], 
-                         removed_columns: list, vif_results: list) -> str:
+                         removed_columns: list, vif_results: list, encoded_info: list = None) -> str:
     """Generate LLM explanation (optional)."""
     if not LANGGRAPH_AVAILABLE:
         return "LLM summary not available (langgraph not installed)"
@@ -322,12 +358,16 @@ Rules applied:
 - Pearson correlation enforced for redundancy
 - VIF enforced only for linear/logistic models
 - VIF does not require a target variable
+- Categorical features numerically encoded for ML readiness
 
 Removed features:
 {removed_columns}
 
 VIF results:
 {vif_results}
+
+Encoded features:
+{encoded_info}
 """
 
         response = llm.invoke([HumanMessage(content=prompt)])
@@ -395,8 +435,11 @@ def run_correlation_agent(
             df, redundant_pairs, vif_results, model_type, target_col
         )
         
+        # Encode categorical features
+        refined_df, encoded_info = encode_categorical_features(refined_df, target_col)
+        
         # Generate LLM summary
-        llm_summary = generate_llm_summary(model_type, target_col, removed_columns, vif_results)
+        llm_summary = generate_llm_summary(model_type, target_col, removed_columns, vif_results, encoded_info)
         
         # Save outputs
         refined_df.to_csv(output_csv, index=False)
@@ -412,6 +455,7 @@ def run_correlation_agent(
             "chi_square": chi_results,
             "anova": anova_results,
             "vif": vif_results,
+            "encoded_features": encoded_info,
             "timestamp": datetime.now().isoformat()
         }
         

@@ -1,10 +1,3 @@
-# =====================================================
-# Master Agent - Intelligent EDA Pipeline Orchestrator
-# =====================================================
-# Makes intelligent decisions about which agents to run
-# based on data characteristics analysis
-# =====================================================
-
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Any, Tuple
@@ -12,7 +5,6 @@ from datetime import datetime
 import os
 import sys
 
-# Add parent directory to path for agent imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -24,9 +16,9 @@ class MasterAgent:
     
     def __init__(self, config: Dict = None):
         self.config = config or {
-            "missing_threshold": 0,           # Any missing = run missing agent
-            "outlier_iqr_multiplier": 1.5,    # IQR multiplier for outlier detection
-            "min_outlier_columns": 1,         # Minimum columns with outliers to run
+            "missing_threshold": 0,           
+            "outlier_iqr_multiplier": 1.5,    
+            "min_outlier_columns": 1,         
         }
         self.decision_trace = []
     
