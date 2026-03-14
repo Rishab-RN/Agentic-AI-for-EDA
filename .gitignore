@@ -96,3 +96,5 @@ coverage.xml
 *.joblib
 *.h5
 *.model
+
+workflow_diagram.html
