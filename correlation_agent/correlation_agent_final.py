@@ -268,9 +268,10 @@ def compute_vif(df: pd.DataFrame, features: list):
 
 
 def encode_categorical_features(df: pd.DataFrame, target_col: Optional[str]):
-    """Encode categorical features using One-Hot Encoding and Label Encoding."""
+    """Encode categorical features. Drops if unique values > 15."""
     df = df.copy()
     encoded_info = []
+    dropped_high_cardinality = []
     
     categorical_cols = list(df.select_dtypes(include=["object", "category"]).columns)
     
@@ -284,23 +285,22 @@ def encode_categorical_features(df: pd.DataFrame, target_col: Optional[str]):
         
     for col in categorical_cols:
         unique_count = df[col].nunique()
-        if unique_count <= 10:
-            # One-Hot Encode for low cardinality
+        if unique_count <= 15:
+            # One-Hot Encode for low cardinality (<= 15)
             df = pd.get_dummies(df, columns=[col], drop_first=True)
             encoded_info.append({"column": col, "method": "One-Hot Encoding", "unique_values": int(unique_count)})
         else:
-            # Label Encode for high cardinality
-            from sklearn.preprocessing import LabelEncoder
-            le = LabelEncoder()
-            df[col] = le.fit_transform(df[col].astype(str))
-            encoded_info.append({"column": col, "method": "Label Encoding", "unique_values": int(unique_count)})
+            # Drop for cardinality > 15
+            df.drop(columns=[col], inplace=True)
+            dropped_high_cardinality.append(col)
+            encoded_info.append({"column": col, "method": "Dropped (>15 Unique)", "unique_values": int(unique_count)})
             
     # Convert bool columns from get_dummies to int
     for col in df.columns:
         if df[col].dtype == bool:
             df[col] = df[col].astype(int)
             
-    return df, encoded_info
+    return df, encoded_info, dropped_high_cardinality
 
 
 def apply_removal(df: pd.DataFrame, redundant_pairs: list, vif_results: list, 
@@ -435,8 +435,11 @@ def run_correlation_agent(
             df, redundant_pairs, vif_results, model_type, target_col
         )
         
-        # Encode categorical features
-        refined_df, encoded_info = encode_categorical_features(refined_df, target_col)
+        # Encode categorical features & drop high cardinality
+        refined_df, encoded_info, dropped_cats = encode_categorical_features(refined_df, target_col)
+        
+        # Add the dropped categoricals to the master removed columns list
+        removed_columns.extend(dropped_cats)
         
         # Generate LLM summary
         llm_summary = generate_llm_summary(model_type, target_col, removed_columns, vif_results, encoded_info)

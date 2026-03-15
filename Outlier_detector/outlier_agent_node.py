@@ -755,9 +755,7 @@ def apply_treatment(state: OutlierState) -> OutlierState:
                     "outliers_removed": int(outlier_count),
                     "bounds": [round(lower, 4), round(upper, 4)]
                 })
-            else:
-                # CONSERVATIVE/SAFE MODE: Cap (Winsorize) outliers instead of dropping
-                # Only drop if it's extreme, but for now we cap EVERYTHING that was an outlier
+            else:                   
                 capped = parsed.clip(lower, upper)
                 df[col] = capped
                 treatment_log.append({
@@ -776,7 +774,6 @@ def apply_treatment(state: OutlierState) -> OutlierState:
                 "type": type(e).__name__
             })
     
-    # Apply row removal (if any)
     rows_before = len(df)
     df = df[keep_mask]
     rows_removed = rows_before - len(df)
@@ -804,7 +801,6 @@ def generate_report(state: OutlierState) -> OutlierState:
         "errors_encountered": len(state["errors"])
     }
     
-    # Add summary to treatment log
     state["treatment_log"].insert(0, {"report_summary": summary})
     
     return state
@@ -853,7 +849,6 @@ def outlier_agent_node(state: dict) -> dict:
     Returns:
         Updated state with cleaned data and logs
     """
-    # Handle both "data" and "df" keys
     if "data" in state:
         df = state["data"].copy()
     elif "df" in state:
@@ -861,7 +856,6 @@ def outlier_agent_node(state: dict) -> dict:
     else:
         raise ValueError("State must contain 'data' or 'df' key with DataFrame")
     
-    # Initialize OutlierState
     outlier_state: OutlierState = {
         "df": df,
         "original_shape": df.shape,
@@ -873,20 +867,18 @@ def outlier_agent_node(state: dict) -> dict:
         "config": state.get("config", DEFAULT_CONFIG)
     }
     
-    # Run pipeline steps
     outlier_state = analyze_numeric_columns(outlier_state)
     outlier_state = classify_column_intents(outlier_state)
     outlier_state = detect_outliers(outlier_state)
     outlier_state = apply_treatment(outlier_state)
     outlier_state = generate_report(outlier_state)
     
-    # DEBUG: Print what the Size column looks like after treatment
     if "Size" in outlier_state["df"].columns:
         print(f"[DEBUG] Size column after treatment: {outlier_state['df']['Size'].head(5).tolist()}")
     if "Installs" in outlier_state["df"].columns:
         print(f"[DEBUG] Installs column after treatment: {outlier_state['df']['Installs'].head(5).tolist()}")
     
-    # Update original state
+    
     if "data" in state:
         state["data"] = outlier_state["df"]
     else:
@@ -906,7 +898,7 @@ def outlier_agent_node(state: dict) -> dict:
 if __name__ == "__main__":
     import sys
     
-    # Test with a sample file
+   
     test_file = sys.argv[1] if len(sys.argv) > 1 else "../data/googleplaystore.csv"
     
     print(f"Loading: {test_file}")

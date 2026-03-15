@@ -98,3 +98,5 @@ coverage.xml
 *.model
 
 workflow_diagram.html
+convert_to_docx.py
+Software_Testing_Chapter5.docx
